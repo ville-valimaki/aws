@@ -1,0 +1,124 @@
+Description: Static s3 hosting with cloudfront to resolve ssl
+
+Parameters:
+  HostedZoneId:
+    Type: String
+    Description: Hosted zone id
+    Default: xxx
+
+  DomainName:
+    Description: Name for the domain used for cdn
+    Type: String
+    Default: xxx
+
+  S3BucketName:
+    Description: Name for s3 bucket name where to serve static templates
+    Type: String
+    Default: xxx
+
+  CertificateArn:
+    Description: SSL certificate
+    Type: String
+
+  OAIName:
+    Description: Name of the origin access identity for CDN
+    Type: String
+    Default: xxx.s3.amazonaws.com
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref OAIName
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
+          - Action: s3:ListBucket
+            Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Resource: !Sub 'arn:aws:s3:::${S3Bucket}'
+
+  CDNCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        DefaultTTL: 3600
+        MaxTTL: 3600
+        MinTTL: 3600
+        Name: CDNRecommendationsCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: whitelist
+            Headers:
+              - key
+          QueryStringsConfig:
+            QueryStringBehavior: all
+
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2
+        Origins:
+          - Id: Bucket
+            DomainName: !GetAtt S3Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'
+        Comment: Cloudfront distribution for recommendations
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          TargetOriginId: Bucket
+          DefaultTTL: 3600
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachePolicyId: !Ref CDNCachePolicy
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_200
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+
+  DNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Comment: CNAME to CloudFront distribution
+      Name: !Ref DomainName
+      Type: CNAME
+      TTL: '60'
+      ResourceRecords:
+        - !GetAtt [ CloudfrontDistribution, DomainName ]
+
+Outputs:
+  Domain:
+    Description: A reference to the domain for recommendations
+    Value: !Ref DomainName
