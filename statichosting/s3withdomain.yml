@@ -1,3 +1,4 @@
+---
 Description: Static s3 hosting with cloudfront to resolve ssl
 
 Parameters:
@@ -87,7 +88,7 @@ Resources:
           - Id: Bucket
             DomainName: !GetAtt S3Bucket.DomainName
             S3OriginConfig:
-              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}' # yamllint disable-line rule:line-length
         Comment: Cloudfront distribution for recommendations
         DefaultRootObject: index.html
         Aliases:
@@ -116,7 +117,7 @@ Resources:
       Type: CNAME
       TTL: '60'
       ResourceRecords:
-        - !GetAtt [ CloudfrontDistribution, DomainName ]
+        - !GetAtt [CloudfrontDistribution, DomainName]
 
 Outputs:
   Domain:
