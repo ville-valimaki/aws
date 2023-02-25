@@ -1,0 +1,93 @@
+---
+Description: Openvpn server to be launched to a public subnet. Domain for vpn.
+
+Parameters:
+  VpnVpcId:
+    Type: String
+    Description: Vpc id for security group
+    Default: vpc-02ca2cb0020241281
+  HostedZoneId:
+    Type: String
+    Description: Hosted zone id for dns records
+    Default: Z0928651WEAUM5DYQXGL
+  InstanceSubnetId:
+    Type: String
+    Description: Public subnet id for instance
+    Default: subnet-0b4dce864c3b61b36
+  VpnAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/bionic/stable/current/amd64/hvm/ebs-gp2/ami-id'  # yamllint disable-line rule:line-length
+    Description: AMI id for instance
+  SSHKeyPair:
+    Description: Key Pair used to ssh to the instance
+    Type: "AWS::EC2::KeyPair::KeyName"
+  InstanceType:
+    Type: String
+    Description: Instance type for vpn server
+    Default: t3.small
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+  DomainName:
+    Description: Name for the dns record used for vpn server
+    Type: String
+    Default: xxx
+
+Resources:
+  VpnInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref VpnAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref InstanceSubnetId
+      KeyName: !Ref SSHKeyPair
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            DeleteOnTermination: "true"
+            VolumeSize: "50"
+      SecurityGroupIds:
+        - !Ref InstanceVpnSecurityGroup
+        - !Ref InstanceSshSecurityGroup
+      Tags:
+        - Key: owner
+          Value: vjvalima
+        - Key: product
+          Value: vpn
+  InstanceVpnSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enables vpn client access
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: 1194
+          ToPort: 1194
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VpnVpcId
+  InstanceSshSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enables vpn client access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VpnVpcId
+  DNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Comment: CNAME to vpn instance
+      Name: !Ref DomainName
+      Type: A
+      TTL: '360'
+      ResourceRecords:
+        - !GetAtt VpnInstance.PublicIp
+
+Outputs:
+  InstanceIP:
+    Value: !GetAtt VpnInstance.PublicIp
+    Description: Instance public IP
