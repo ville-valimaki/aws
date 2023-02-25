@@ -88,7 +88,7 @@ Resources:
           - Id: Bucket
             DomainName: !GetAtt S3Bucket.DomainName
             S3OriginConfig:
-              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}' # yamllint disable-line rule:line-length
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'  # yamllint disable-line rule:line-length
         Comment: Cloudfront distribution for recommendations
         DefaultRootObject: index.html
         Aliases:
