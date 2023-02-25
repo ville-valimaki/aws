@@ -51,6 +51,7 @@ Resources:
       SecurityGroupIds:
         - !Ref InstanceVpnSecurityGroup
         - !Ref InstanceSshSecurityGroup
+        - !Ref InstanceAdminSecurityGroup
       Tags:
         - Key: owner
           Value: vjvalima
@@ -74,6 +75,16 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VpnVpcId
+  InstanceAdminSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enables vpn access ui access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 943
+          ToPort: 943
           CidrIp: 0.0.0.0/0
       VpcId: !Ref VpnVpcId
   DNS:
