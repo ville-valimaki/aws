@@ -57,14 +57,24 @@ Resources:
           Value: vjvalima
         - Key: product
           Value: vpn
-  InstanceVpnSecurityGroup:
+  InstanceVpnUdpSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Enables vpn client access
+      GroupDescription: Enables vpn client udp access
       SecurityGroupIngress:
         - IpProtocol: udp
           FromPort: 1194
           ToPort: 1194
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VpnVpcId
+  InstanceVpnTcpSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enables vpn client tcp access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
       VpcId: !Ref VpnVpcId
   InstanceSshSecurityGroup:
