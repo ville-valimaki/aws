@@ -3,13 +3,11 @@ Description: Openvpn server to be launched to a public subnet. Domain for vpn.
 
 Parameters:
   VpnVpcId:
-    Type: String
+    Type: AWS::EC2::VPC::Id
     Description: Vpc id for security group
-    Default: vpc-02ca2cb0020241281
   HostedZoneId:
-    Type: String
+    Type: AWS::Route53::HostedZone::Id
     Description: Hosted zone id for dns records
-    Default: Z0928651WEAUM5DYQXGL
   InstanceSubnetId:
     Type: String
     Description: Public subnet id for instance

@@ -3,9 +3,8 @@ Description: Static s3 hosting with cloudfront to resolve ssl
 
 Parameters:
   HostedZoneId:
-    Type: String
+    Type: AWS::Route53::HostedZone::Id
     Description: Hosted zone id
-    Default: xxx
 
   DomainName:
     Description: Name for the domain used for cdn
