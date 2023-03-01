@@ -65,7 +65,7 @@ Resources:
         DefaultTTL: 3600
         MaxTTL: 3600
         MinTTL: 3600
-        Name: CDNRecommendationsCachePolicy
+        Name: CDNCachePolicy
         ParametersInCacheKeyAndForwardedToOrigin:
           CookiesConfig:
             CookieBehavior: none
@@ -89,7 +89,7 @@ Resources:
             DomainName: !GetAtt S3Bucket.DomainName
             S3OriginConfig:
               OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOAI}'  # yamllint disable-line rule:line-length
-        Comment: Cloudfront distribution for recommendations
+        Comment: Cloudfront distribution for s3 bucket
         DefaultRootObject: index.html
         Aliases:
           - !Ref DomainName
@@ -121,5 +121,5 @@ Resources:
 
 Outputs:
   Domain:
-    Description: A reference to the domain for recommendations
+    Description: A reference to the domain for distribution
     Value: !Ref DomainName

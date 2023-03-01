@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# install openvpn access server
+# install openvpn access server. two concurrent options available for free tier for 2023
 
 apt update
 apt upgrade
@@ -17,3 +17,5 @@ dpkg-reconfigure tzdata
 # apt update
 # apt install -y bridge-utils dmidecode iptables iproute2 libc6 libgcc1 liblz4-1 liblzo2-2 libmariadb3 libpcap0.8 libssl1.1 libstdc++6 libsasl2-2 libsqlite3-0 net-tools python3-pkg-resources python3-migrate python3-sqlalchemy python3-mysqldb python3-ldap3 sqlite3 zlib1g python3-netaddr python3-arrow python3-lxml python3-constantly python3-hyperlink python3-automat python3-service-identity python3-cffi python3-setuptools
 # dpkg -i openvpn-as-bundled-clients-27.deb openvpn-as_2.11.3-af31575c-Ubuntu18_amd64.deb
+
+# requires 443 tcp, 942 tcp, 1194 udp to be open for the instance
