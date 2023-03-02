@@ -1,6 +1,6 @@
 # AWS cloudformation templates
 
-Basic aws cloudformating templates
+Basic aws cloudformation templates and some useful resources.
 
 ## Templates
 Templates in this repository are just rough base templates intended to be modified, but will work as such.
