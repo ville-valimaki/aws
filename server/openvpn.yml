@@ -9,9 +9,8 @@ Parameters:
     Type: AWS::Route53::HostedZone::Id
     Description: Hosted zone id for dns records
   InstanceSubnetId:
-    Type: String
+    Type: AWS::EC2::Subnet::Id
     Description: Public subnet id for instance
-    Default: subnet-0b4dce864c3b61b36
   VpnAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/canonical/ubuntu/server/bionic/stable/current/amd64/hvm/ebs-gp2/ami-id'  # yamllint disable-line rule:line-length
