@@ -9,8 +9,8 @@ echo Enter profile for audit:
 read PROFILE
 
 # for quick default values
-# REGION=eu-north-1
-# PROFILE=vjvalima
+# REGION=xxx
+# PROFILE=yyy
 
 echo Running audit with profile $PROFILE in region $REGION
 
