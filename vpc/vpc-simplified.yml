@@ -1,9 +1,7 @@
 ---
-Description: vpc with 2 public subnets, two private subnets with nats and
-  internet gateway for public subnets. covers 254 addresses for each network.
-  If needed update to /16 for larger production use and add third
-  availability zone. note that allocating two ip addresses brings relatively
-  significant costs if the vpc is intended only for private use,
+Description: simplified vpc with one public and private subnet with nat and
+  internet gateway. covers 254 addresses for each network. consider not having
+  private subnet at all to avoid allocating ip address for the nat.
 
 Parameters:
   EnvironmentName:
@@ -20,30 +18,15 @@ Parameters:
     Type: String
     Default: 10.111.0.0/24
 
-  PublicSubnet2CIDR:
-    Description: CIDR for the public subnet in Availability zone 2
-    Type: String
-    Default: 10.111.1.0/24
-
   PrivateSubnet1CIDR:
     Description: CIDR for the private subnet in Availability zone 1
     Type: String
     Default: 10.111.10.0/24
 
-  PrivateSubnet2CIDR:
-    Description: CIDR for the private subnet in Availability zone 2
-    Type: String
-    Default: 10.111.11.0/24
-
   AvailabilityZone1:
     Description: Availability zone 1
     Type: String
     Default: eu-north-1a
-
-  AvailabilityZone2:
-    Description: Availability zone 2
-    Type: String
-    Default: eu-north-1b
 
 Resources:
   VPC:
@@ -80,17 +63,6 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
 
-  PublicSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Ref AvailabilityZone2
-      CidrBlock: !Ref PublicSubnet2CIDR
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
-
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -102,24 +74,7 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
 
-  PrivateSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Ref AvailabilityZone2
-      CidrBlock: !Ref PrivateSubnet2CIDR
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
-
   NatGateway1EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: InternetGatewayAttachment
-    Properties:
-      Domain: vpc
-
-  NatGateway2EIP:
     Type: AWS::EC2::EIP
     DependsOn: InternetGatewayAttachment
     Properties:
@@ -130,12 +85,6 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGateway1EIP.AllocationId
       SubnetId: !Ref PublicSubnet1
-
-  NatGateway2:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway2EIP.AllocationId
-      SubnetId: !Ref PublicSubnet2
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -159,12 +108,6 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
 
-  PublicSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet2
-
   PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -186,52 +129,23 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable1
       SubnetId: !Ref PrivateSubnet1
 
-  PrivateRouteTable2:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} Private Routes (AZ2)
-
-  DefaultPrivateRoute2:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable2
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway2
-
-  PrivateSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable2
-      SubnetId: !Ref PrivateSubnet2
-
 Outputs:
   VPC:
     Description: A reference to the created VPC
     Value: !Ref VPC
 
-  PublicSubnets:
+  PublicSubnet:
     Description: A list of the public subnets
-    Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2]]
+    Value: !Ref PublicSubnet1
 
-  PrivateSubnets:
+  PrivateSubnet:
     Description: A list of the private subnets
-    Value: !Join [",", [!Ref PrivateSubnet1, !Ref PrivateSubnet2]]
+    Value: !Ref PrivateSubnet1
 
   PublicSubnet1:
     Description: A reference to the public subnet in the 1st Availability Zone
     Value: !Ref PublicSubnet1
 
-  PublicSubnet2:
-    Description: A reference to the public subnet in the 2nd Availability Zone
-    Value: !Ref PublicSubnet2
-
   PrivateSubnet1:
     Description: A reference to the private subnet in the 1st Availability Zone
     Value: !Ref PrivateSubnet1
-
-  PrivateSubnet2:
-    Description: A reference to the private subnet in the 2nd Availability Zone
-    Value: !Ref PrivateSubnet2
